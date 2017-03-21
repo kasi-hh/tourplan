@@ -1,0 +1,15 @@
+{
+  "name": "kasi/schuchardt",
+  "description": "Tourenplan",
+  "minimum-stability": "dev",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "kasi",
+      "email": "kasi@arielgrafik.de"
+    }
+  ],
+  "require": {
+    "slim/slim":"3.7.0"
+  }
+}

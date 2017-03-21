@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Setting cells and column properties</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<link rel="stylesheet" type="text/css" href="dhtmlx/fonts/font_roboto/roboto.css"/>
+	<link rel="stylesheet" type="text/css" href="dhtmlx/dhtmlx.css"/>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="dhtmlx/dhtmlx.js"></script>
+    <style type="text/css">
+        html, body {
+            height:100%;
+            padding:0;
+            margin:0;
+        }
+    </style>
+	<script>
+		var grid, layout;
+		function loadDistance(from, to){
+		    return jQuery.post({
+                url:'/api/distance',
+                data:{
+                    from:from,
+                    to:to
+                }
+            })
+        }
+		function doOnLoad() {
+		    var colwidth = jQuery('body').width() / 9, col2 = colwidth*2, col3 = colwidth * 3;
+		    layout = new dhtmlXLayoutObject({
+		        parent:document.body,
+				pattern:'1C',
+				cells:[
+					{id:'a',text:'Tourenplan'}
+				]
+			});
+			grid = layout.cells('a').attachGrid();
+			grid.setImagePath("dhtmlx/imgs/");
+			grid.setHeader("Name,Ort,Strecke,Zeit");
+			grid.setInitWidths(col2+','+col3+','+col2+','+col2);
+			grid.setColAlign("left,left,leftt,left");
+			grid.setColTypes("ed,ed,ro,ro");
+			grid.setColSorting("na,na,na,na");
+			grid.setColumnIds('name,ort,strecke,zeit');
+			grid.init();
+			grid.attachEvent('onEditCell', onChange);
+			grid.enableEditEvents(true,true,true);
+			for(var id = 1; id < 30; id++){
+			    grid.addRow(id,',,');
+            }
+            /*
+            grid.parse([
+				{id:1,name:'',ort:'',stecke:'0',zeit:'0'},
+				{id:2,name:'',ort:'',stecke:'0',zeit:'0'},
+				{id:3,name:'',ort:'',stecke:'0',zeit:'0'},
+				{id:4,name:'',ort:'',stecke:'0',zeit:'0'}
+			],'js');
+			*/
+		}
+		function onChange(stage, row, col, newValue, oldValue){
+		    if (stage == 2 && row > 1 && col == 1){
+                var from = grid.cells(row-1,1).getValue();
+                if (from.trim() && newValue.trim()){
+                    loadDistance(from, newValue).then(function(result){
+                        if(result.status == 'OK'){
+                            var element = result.rows[0].elements[0];
+                            if (element.status == 'OK'){
+                                var distance = element.distance;
+                                var duration = element.duration;
+                                grid.cells(row,2).setValue(distance.text);
+                                grid.cells(row,3).setValue(duration.text);
+                            }
+                        }
+                    });
+                }
+            }
+            return true;
+        }
+	</script>
+</head>
+<body onload="doOnLoad()">
+</body>
+</html>
