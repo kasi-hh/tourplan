@@ -14,8 +14,8 @@ class GoogleController extends BaseController {
         $from = $request->getParsedBodyParam('from', false);
         $to = $request->getParsedBodyParam('to', false);
         if (!$from || !$to) return $response->withJson(['status'=>'failed']);
-        $maps = new \App\GoogleMaps();
-        $data = $maps->getDistance($from, $to, $this->container);
+        $maps = new \App\GoogleMaps($this->container);
+        $data = $maps->getDistance($from, $to);
         return $response->withJson($data);
     }
 }
