@@ -43,7 +43,8 @@
 		        items:[
 					{id:'adressen',text:'Adressen',selected:false},
 					{id:'planung',text:'Planung',selected:true},
-					{id:'touren',text:'Touren'}
+					{id:'touren',text:'Touren'},
+					{id:'ausgabe',text:'Ausgabe'},
 				]
 			});
 
@@ -97,14 +98,14 @@
                 }
             });
             // </editor-fold>
-            // <editor-fold desc="**Bereich Touren**">
-		    var tourenLayout = sidebar.cells('touren').attachLayout({
+            // <editor-fold desc="**Bereich Ausgabe**">
+		    var ausgabeLayout = sidebar.cells('ausgabe').attachLayout({
 		        pattern:'1C',
 				cells:[
 					{id:'a',text:'Touren'}
 				]
 			});
-			grid = tourenLayout.cells('a').attachGrid();
+			grid = ausgabeLayout.cells('a').attachGrid();
 			grid.setImagePath("dhtmlx/imgs/");
 			grid.setHeader("Name,Ort,Strecke,Zeit");
 			grid.setInitWidths(col2+','+col3+','+col2+','+col2);
@@ -118,7 +119,7 @@
 			for(var id = 1; id < 30; id++){
 			    grid.addRow(id,',,');
             }
-            var tourTb = tourenLayout.attachToolbar();
+            var tourTb = ausgabeLayout.attachToolbar();
 			var setTourNames = function(names){
                 planTourCombo.clearAll();
                 planTourCombo.addOption(names);
@@ -245,6 +246,25 @@
                 });
             };
             // </editor-fold>
+			var tourenLayout = sidebar.cells('touren').attachLayout({
+				pattern:'1C',
+				cells:[
+					{id:'a',text:'Touren'}
+				]
+			});
+			var tourenGrid = tourenLayout.cells('a').attachGrid();
+            tourenGrid.setImagePath("dhtmlx/imgs/");
+            tourenGrid.setHeader("Id,Name");
+            tourenGrid.setInitWidths('50,300');
+            tourenGrid.setColAlign("left,left");
+            tourenGrid.setColTypes("ro,ed");
+            tourenGrid.setColSorting("na,na");
+            tourenGrid.setColumnIds('id,bezeichnung');
+            tourenGrid.init();
+            var tourenTb = tourenLayout.attachToolbar();
+            tourenTb.addButton('neu',0,'Neu');
+
+
             jQuery.post('/api/main',{}).then(function(response, success){
                 if (success){
                     adrGrid.parse(response.adressen,'js');
