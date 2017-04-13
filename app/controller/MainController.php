@@ -19,6 +19,7 @@ class MainController extends BaseController {
         $result['adressen'] = $people->getAdressen();
         $result['tournames'] = $touren->getTourNames();
         $result['adressnames'] = $adressen->getAdressenNames();
+        $result['touren'] = $touren->load();
         return $response->withJson($result);
     }
 }

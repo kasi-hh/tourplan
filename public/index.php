@@ -5,8 +5,8 @@
  * Date: 17.03.2017
  * Time: 14:30
  */
-header('X-Frame-Options: GOFORIT');
 define('APP_BASE', dirname(__DIR__));
+
 //$_SERVER['SCRIPT_NAME'] = '/index.php';
 $autoloader = include '../vendor/autoload.php';
 $autoloader->addPsr4('Controller\\',APP_BASE.'/app/controller');
@@ -24,6 +24,13 @@ $app->post('/api/adressen/create', '\Controller\AdressenController:create');
 $app->post('/api/adressen/delete', '\Controller\AdressenController:delete');
 $app->post('/api/plan/gettour', '\Controller\PlanController:getTour');
 $app->post('/api/plan/add', '\Controller\PlanController:add');
+$app->post('/api/plan/delete', '\Controller\PlanController:delete');
+$app->post('/api/plan/recalc', '\Controller\PlanController:recalc');
+$app->post('/api/plan/setorder', '\Controller\PlanController:setorder');
+$app->post('/api/touren/load', '\Controller\TourenController:load');
+$app->post('/api/touren/create', '\Controller\TourenController:create');
+$app->post('/api/touren/delete', '\Controller\TourenController:delete');
+$app->post('/api/touren/update', '\Controller\TourenController:update');
 
 $container = $app->getContainer();
 $container['db'] = function(\Slim\Container $container){
@@ -36,4 +43,5 @@ $container['db'] = function(\Slim\Container $container){
     $pdo = new \PDO($dns,$user,$password,[PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'']);
     return $pdo;
 };
+
 $app->run();

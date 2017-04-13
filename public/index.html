@@ -1,61 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Tourenplan</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-	<link rel="stylesheet" type="text/css" href="dhtmlx/fonts/font_roboto/roboto.css"/>
-	<link rel="stylesheet" type="text/css" href="dhtmlx/dhtmlx.css"/>
+    <title>Tourenplan</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <link rel="stylesheet" type="text/css" href="dhtmlx/fonts/font_roboto/roboto.css"/>
+    <link rel="stylesheet" type="text/css" href="dhtmlx/dhtmlx.css"/>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-	<script src="dhtmlx/dhtmlx.js"></script>
+    <script src="dhtmlx/dhtmlx.js"></script>
     <style type="text/css">
         html, body {
-            height:100%;
-            padding:0;
-            margin:0;
+            height: 100%;
+            padding: 0;
+            margin: 0;
         }
     </style>
-	<script>
-		var grid, layout, sidebar, form, wins;
-		function loadDistance(from, to){
-		    return jQuery.post({
-                url:'/api/distance',
-                data:{
-                    from:from,
-                    to:to
+    <script>
+        var grid, layout, sidebar, form, wins;
+        function loadDistance(from, to) {
+            return jQuery.post({
+                url: '/api/distance',
+                data: {
+                    from: from,
+                    to: to
                 }
             })
         }
-		function doOnLoad() {
-		    var colwidth = jQuery('body').width() / 9, col2 = colwidth*2, col3 = colwidth * 3;
-		    wins = new dhtmlXWindows({
-                image_path:"dhtmlx/imgs/"
+        function doOnLoad() {
+            var colwidth = jQuery('body').width() / 9, col2 = colwidth * 2, col3 = colwidth * 3;
+            wins = new dhtmlXWindows({
+                image_path: "dhtmlx/imgs/"
             });
-		    layout = new dhtmlXLayoutObject({
-		        parent:document.body,
-				pattern:'1C',
-				cells:[
-					{id:'a',text:'Tourenplan'}
-				]
-			});
-		    sidebar = layout.cells('a').attachSidebar({
-		        template:'text',
-		        items:[
-					{id:'adressen',text:'Adressen',selected:false},
-					{id:'planung',text:'Planung',selected:true},
-					{id:'touren',text:'Touren'},
-					{id:'ausgabe',text:'Ausgabe'},
-				]
-			});
+            layout = new dhtmlXLayoutObject({
+                parent: document.body,
+                pattern: '1C',
+                cells: [
+                    {id: 'a', text: 'Tourenplan'}
+                ]
+            });
+            sidebar = layout.cells('a').attachSidebar({
+                template: 'text',
+                items: [
+                    {id: 'adressen', text: 'Adressen', selected: false},
+                    {id: 'planung', text: 'Planung', selected: false},
+                    {id: 'touren', text: 'Touren', selected: true},
+                    {id: 'ausgabe', text: 'Ausgabe'},
+                ]
+            });
 
             // <editor-fold desc="**Bereich Planung**">
-            var planCurrentTour;
-		    var planLayout = sidebar.cells('planung').attachLayout({
-				pattern:'1C',
-				cells:[
-					{id:'a',text:'PLanung'}
-				]
-			});
+            var planCurrentTour, currentPlanItem;
+            var planLayout = sidebar.cells('planung').attachLayout({
+                pattern: '1C',
+                cells: [
+                    {id: 'a', text: 'PLanung'}
+                ]
+            });
             var planGrid = planLayout.cells('a').attachGrid();
             planGrid.setImagePath("dhtmlx/imgs/");
             planGrid.setHeader("Name,Ort,Strecke,Zeit");
@@ -64,33 +64,74 @@
             planGrid.setColTypes("ro,ro,ro,ro");
             planGrid.setColSorting("na,na,na,na");
             planGrid.setColumnIds('name,ort,strecke,zeit');
+            planGrid.enableDragAndDrop(true);
+            planGrid.attachEvent('onDrop', function (sId, tId) {
+                var order = [];
+                ids = [];
+                planGrid.forEachRow(function (id) {
+                    order.push(id + '-' + planGrid.getRowIndex(id));
+
+                });
+                jQuery.post('/api/plan/setorder', {order: order, plan_id: planCurrentTour}).then(function (response) {
+
+                });
+                return true;
+            });
             planGrid.init();
 
             var planTb = planLayout.attachToolbar();
-            planTb.addText('text1',0,'Tour');
-            planTb.addText('text2',1,'<span id="plan-tour"></span>');
-            planTb.addText('text3',3,'Adressen');
-            planTb.addText('text4',4,'<span id="plan-adr"></span>');
-            planTb.addButton('add_adresse',5,'Adresse hinzufügen');
-			var planTourCombo = new dhtmlXCombo("plan-tour","plan_tour","100px");
-			var planAdrCombo = new dhtmlXCombo("plan-adr","plan_adr","100px");
-			planTourCombo.attachEvent('onChange', function(){
+            planTb.addText('text1', 0, 'Tour:');
+            planTb.addText('text2', 1, '<span id="plan-tour"></span>');
+            planTb.addText('text3', 3, 'Adressen:');
+            planTb.addText('text4', 4, '<span id="plan-adr"></span>');
+            planTb.addButton('add_adresse', 5, 'Adresse hinzufügen');
+            planTb.addButton('delete_adresse', 6, 'Adresse löschen');
+            planTb.addButton('recalc', 7, 'Distanz neu berechnen');
+            var planTourCombo = new dhtmlXCombo("plan-tour", "plan_tour", "100px");
+            var planAdrCombo = new dhtmlXCombo("plan-adr", "plan_adr", "100px");
+            planTourCombo.attachEvent('onChange', function () {
                 planCurrentTour = planTourCombo.getSelectedValue();
                 loadPlanTour();
             });
-            var loadPlanTour = function() {
-                jQuery.post('/api/plan/gettour',{id:planCurrentTour}).then(function(response){
+            var loadPlanTour = function () {
+                jQuery.post('/api/plan/gettour', {id: planCurrentTour}).then(function (response) {
                     planGrid.clearAll();
-                    planGrid.parse(response.data,'js');
+                    planGrid.parse(response.data, 'js');
                 })
 
             };
-            planTb.attachEvent('onClick', function(btn){
-                switch(btn){
+            planTb.attachEvent('onClick', function (btn) {
+                switch (btn) {
                     case 'add_adresse':
                         var id = planAdrCombo.getSelectedValue();
-                        if(planCurrentTour && id){
-                            jQuery.post('/api/plan/add',{plan_id:planCurrentTour,id:id}).then(function(response){
+                        if (planCurrentTour && id) {
+                            jQuery.post('/api/plan/add', {plan_id: planCurrentTour, id: id}).then(function (response) {
+                                loadPlanTour();
+                            })
+                        }
+                        break;
+                    case 'delete_adresse':
+                        var recId = planGrid.getSelectedRowId();
+                        if (recId) {
+                            var name = planGrid.cells(recId, 0).getValue();
+                            dhtmlx.confirm({
+                                type: "confirm",
+                                text: "Eintrag " + name + ' sicher entfernen?',
+                                ok: 'Ja',
+                                cancel: 'Abbrechen',
+                                callback: function (result) {
+                                    if (result) {
+                                        jQuery.post('/api/plan/delete', {id: recId}).then(function (response) {
+                                            loadPlanTour();
+                                        })
+                                    }
+                                }
+                            });
+                        }
+                        break;
+                    case 'recalc':
+                        if (planCurrentTour) {
+                            jQuery.post('/api/plan/recalc', {plan_id: planCurrentTour}).then(function (response) {
                                 loadPlanTour();
                             })
                         }
@@ -99,82 +140,85 @@
             });
             // </editor-fold>
             // <editor-fold desc="**Bereich Ausgabe**">
-		    var ausgabeLayout = sidebar.cells('ausgabe').attachLayout({
-		        pattern:'1C',
-				cells:[
-					{id:'a',text:'Touren'}
-				]
-			});
-			grid = ausgabeLayout.cells('a').attachGrid();
-			grid.setImagePath("dhtmlx/imgs/");
-			grid.setHeader("Name,Ort,Strecke,Zeit");
-			grid.setInitWidths(col2+','+col3+','+col2+','+col2);
-			grid.setColAlign("left,left,leftt,left");
-			grid.setColTypes("ed,ed,ro,ro");
-			grid.setColSorting("na,na,na,na");
-			grid.setColumnIds('name,ort,strecke,zeit');
-			grid.init();
-			grid.attachEvent('onEditCell', onChange);
-			grid.enableEditEvents(true,true,true);
-			for(var id = 1; id < 30; id++){
-			    grid.addRow(id,',,');
-            }
-            var tourTb = ausgabeLayout.attachToolbar();
-			var setTourNames = function(names){
-                planTourCombo.clearAll();
-                planTourCombo.addOption(names);
-			}
-			tourTb.addButtonSelect('tour_name',0,'Tour',[]);
-			tourTb.addListOption('tour_name','mo',1,'button','Montag');
-			tourTb.addListOption('tour_name','di',2,'button','Dienstag');
-			tourTb.addListOption('tour_name','mi',3,'button','Mittwoch');
-			tourTb.addListOption('tour_name','do',4,'button','Donnerstag');
-			tourTb.addListOption('tour_name','fr',5,'button','Freitag');
-			tourTb.addListOption('tour_name','sa',6,'button','Samstag');
-			tourTb.addListOption('tour_name','so',7,'button','Sonntag');
-            // </editor-fold>
-            // <editor-fold desc="**Bereich Adressen**">
-			var adrLayout = sidebar.cells('adressen').attachLayout({
-			    pattern:'1C',
-                cells:[
-                    {id:'a',header:false}
+            var ausgabeLayout = sidebar.cells('ausgabe').attachLayout({
+                pattern: '1C',
+                cells: [
+                    {id: 'a', text: 'Touren'}
                 ]
             });
-			var adrToolbar = adrLayout.attachToolbar();
-			adrToolbar.addButton('add',0,'Neue Adresse');
-			adrToolbar.addButton('delete',1,'Adresse löschen');
-			adrToolbar.addButton('map',2,'Maps');
-			adrToolbar.attachEvent('onClick', function(name){
-			    switch(name) {
+            grid = ausgabeLayout.cells('a').attachGrid();
+            grid.setImagePath("dhtmlx/imgs/");
+            grid.setHeader("Name,Ort,Strecke,Zeit");
+            grid.setInitWidths(col2 + ',' + col3 + ',' + col2 + ',' + col2);
+            grid.setColAlign("left,left,leftt,left");
+            grid.setColTypes("ed,ed,ro,ro");
+            grid.setColSorting("na,na,na,na");
+            grid.setColumnIds('name,ort,strecke,zeit');
+            grid.init();
+            grid.attachEvent('onEditCell', onChange);
+            grid.enableEditEvents(true, true, true);
+            for (var id = 1; id < 30; id++) {
+                grid.addRow(id, ',,');
+            }
+            var tourTb = ausgabeLayout.attachToolbar();
+            var setTourNames = function (names) {
+                planTourCombo.clearAll();
+                planTourCombo.addOption(names);
+            }
+            tourTb.addButtonSelect('tour_name', 0, 'Tour', []);
+            tourTb.addListOption('tour_name', 'mo', 1, 'button', 'Montag');
+            tourTb.addListOption('tour_name', 'di', 2, 'button', 'Dienstag');
+            tourTb.addListOption('tour_name', 'mi', 3, 'button', 'Mittwoch');
+            tourTb.addListOption('tour_name', 'do', 4, 'button', 'Donnerstag');
+            tourTb.addListOption('tour_name', 'fr', 5, 'button', 'Freitag');
+            tourTb.addListOption('tour_name', 'sa', 6, 'button', 'Samstag');
+            tourTb.addListOption('tour_name', 'so', 7, 'button', 'Sonntag');
+            // </editor-fold>
+            // <editor-fold desc="**Bereich Adressen**">
+            var adrLayout = sidebar.cells('adressen').attachLayout({
+                pattern: '1C',
+                cells: [
+                    {id: 'a', header: false}
+                ]
+            });
+            var adrToolbar = adrLayout.attachToolbar();
+            adrToolbar.addButton('add', 0, 'Neue Adresse');
+            adrToolbar.addButton('delete', 1, 'Adresse löschen');
+            adrToolbar.addButton('map', 2, 'Maps');
+            adrToolbar.attachEvent('onClick', function (name) {
+                switch (name) {
                     case 'add':
                         var dlg = wins.createWindow({
-                            id:'adr',
-                            left:30,
-                            top:30,
-                            height:350,
-                            width:400,
-                            center:true,
-                            text:'Neue Adresse'
+                            id: 'adr',
+                            left: 30,
+                            top: 30,
+                            height: 370,
+                            width: 400,
+                            center: true,
+                            text: 'Neue Adresse'
                         });
                         var form = dlg.attachForm([
-                            {type:'settings', fieldWidth:230, labelWidth:100},
-                            {type:'block', width:380, list:[
-                                {type:'input',name:'name', label:'Name'},
-                                {type:'input',name:'strasse', label:'Straße'},
-                                {type:'input',name:'plz', label:'Plz'},
-                                {type:'input',name:'ort', label:'Ort'},
-                                {type:'input',name:'telefon', label:'telefon'},
-                                {type:'input',name:'besonderheiten', label:'Besonderheiten',rows:2},
-                                {type:'input',name:'aufenthalt', label:'Aufenthalt'}
-                            ]}
+                            {type: 'settings', fieldWidth: 230, labelWidth: 100},
+                            {
+                                type: 'block', width: 380, list: [
+                                {type: 'input', name: 'name', label: 'Name'},
+                                {type: 'input', name: 'strasse', label: 'Straße'},
+                                {type: 'input', name: 'plz', label: 'Plz'},
+                                {type: 'input', name: 'ort', label: 'Ort'},
+                                {type: 'input', name: 'telefon', label: 'telefon'},
+                                {type: 'input', name: 'besonderheiten', label: 'Besonderheiten', rows: 2},
+                                {type: 'checkbox', name: 'rollator', label: 'Rollator'},
+                                {type: 'input', name: 'aufenthalt', label: 'Aufenthalt'}
+                            ]
+                            }
                         ]);
                         var bar = dlg.attachToolbar();
-                        bar.addButton('save',0,'Hinzufügen');
-                        bar.addButton('cancel',1,'Abrechen');
-                        bar.attachEvent('onClick', function(name){
-                            switch(name){
+                        bar.addButton('save', 0, 'Hinzufügen');
+                        bar.addButton('cancel', 1, 'Abrechen');
+                        bar.attachEvent('onClick', function (name) {
+                            switch (name) {
                                 case 'save':
-                                    jQuery.post('/api/adressen/create',form.getFormData()).then(function(response){
+                                    jQuery.post('/api/adressen/create', form.getFormData()).then(function (response) {
                                         dlg.close();
                                         loadAdrGrid();
                                     });
@@ -189,47 +233,47 @@
                     case 'delete':
                         var id = adrGrid.getSelectedRowId();
                         dhtmlx.confirm({
-                            title:'Adresse löschen',
-                            text: '#'+id+' sicher löschen?',
-                            ok:'Ja',
-                            cancel:'Abbrechen',
-                            callback:function(confirmed){
-                                if(confirmed){
-                                    jQuery.post('/api/adressen/delete',{id:id}).then(loadAdrGrid)
+                            title: 'Adresse löschen',
+                            text: '#' + id + ' sicher löschen?',
+                            ok: 'Ja',
+                            cancel: 'Abbrechen',
+                            callback: function (confirmed) {
+                                if (confirmed) {
+                                    jQuery.post('/api/adressen/delete', {id: id}).then(loadAdrGrid)
                                 }
                             }
                         });
                         break;
                     case 'map':
                         var id = adrGrid.getSelectedRowId();
-                        var str = adrGrid.cells(id,2).getValue();
-                        var plz = adrGrid.cells(id,3).getValue();
-                        var ort = adrGrid.cells(id,4).getValue();
-                        var place = str+','+plz+' '+ort+',Deutschland';
-                        window.open('https://www.google.com/maps/place/'+place,'maps');
+                        var str = adrGrid.cells(id, 2).getValue();
+                        var plz = adrGrid.cells(id, 3).getValue();
+                        var ort = adrGrid.cells(id, 4).getValue();
+                        var place = str + ',' + plz + ' ' + ort + ',Deutschland';
+                        window.open('https://www.google.com/maps/place/' + place, 'maps');
                         break;
                 }
             });
             var adrGrid = adrLayout.cells('a').attachGrid();
             adrGrid.setImagePath("dhtmlx/imgs/");
-            adrGrid.setHeader("Id,Name,Straße,Plz,Ort,Telefon,Besonderheiten,Zeit");
-            adrGrid.setInitWidths('50,200,200,50,200,100,300,50');
-            adrGrid.setColAlign("right,left,left,left,left,left,left,left");
-            adrGrid.setColTypes("ro,ed,ed,ed,ed,ed,ed,ed");
-            adrGrid.setColSorting("na,str,str,str,str,str,str,str");
-            adrGrid.setColumnIds('id,name,strasse,plz,ort,telefon,besonderheiten,aufenthalt');
+            adrGrid.setHeader("Id,Name,Straße,Plz,Ort,Telefon,Besonderheiten,Rolli,Zeit");
+            adrGrid.setInitWidths('50,200,200,50,200,100,300,50,50');
+            adrGrid.setColAlign("right,left,left,left,left,left,left,left,left");
+            adrGrid.setColTypes("ro,ed,ed,ed,ed,ed,ed,ch,ed");
+            adrGrid.setColSorting("na,str,str,str,str,str,str,int,str");
+            adrGrid.setColumnIds('id,name,strasse,plz,ort,telefon,besonderheiten,rollator,aufenthalt');
             adrGrid.init();
-            adrGrid.enableEditEvents(true,true,true);
+            adrGrid.enableEditEvents(true, true, true);
             adrGrid.enableDragAndDrop(true);
             //adrGrid.enableMercyDrag(true);
-            adrGrid.attachEvent('onEditCell', function(stage, row, col, newValue, oldValue){
-                switch(stage){
+            adrGrid.attachEvent('onEditCell', function (stage, row, col, newValue, oldValue) {
+                switch (stage) {
                     case 2:
                         var column = adrGrid.getColumnId(col);
-                        if (newValue != oldValue){
-                            jQuery.post('/api/adressen/update',{column:column,id:row,value:newValue}).then(function(response){
-                                if (response.success !== true){
-                                    adrGrid.cells(row,col).setValue(oldValue);
+                        if (newValue != oldValue) {
+                            jQuery.post('/api/adressen/update', {column: column, id: row, value: newValue}).then(function (response) {
+                                if (response.success !== true) {
+                                    adrGrid.cells(row, col).setValue(oldValue);
                                 }
                             });
                         }
@@ -237,22 +281,23 @@
                 }
                 return true;
             });
-            var loadAdrGrid = function(){
-                jQuery.post('/api/adressen/getdata').then(function(response){
-                    if (response.success){
+            var loadAdrGrid = function () {
+                jQuery.post('/api/adressen/getdata').then(function (response) {
+                    if (response.success) {
                         adrGrid.clearAll();
-                        adrGrid.parse(response.data,'js');
+                        adrGrid.parse(response.data, 'js');
                     }
                 });
             };
             // </editor-fold>
-			var tourenLayout = sidebar.cells('touren').attachLayout({
-				pattern:'1C',
-				cells:[
-					{id:'a',text:'Touren'}
-				]
-			});
-			var tourenGrid = tourenLayout.cells('a').attachGrid();
+            // <editor-fold desc="**Bereich Planung**">
+            var tourenLayout = sidebar.cells('touren').attachLayout({
+                pattern: '1C',
+                cells: [
+                    {id: 'a', text: 'Touren'}
+                ]
+            });
+            var tourenGrid = tourenLayout.cells('a').attachGrid();
             tourenGrid.setImagePath("dhtmlx/imgs/");
             tourenGrid.setHeader("Id,Name");
             tourenGrid.setInitWidths('50,300');
@@ -260,37 +305,117 @@
             tourenGrid.setColTypes("ro,ed");
             tourenGrid.setColSorting("na,na");
             tourenGrid.setColumnIds('id,bezeichnung');
+            tourenGrid.enableEditEvents(true, true, true);
             tourenGrid.init();
+            tourenGrid.attachEvent('onEditCell', function (stage, row, col, newValue, oldValue) {
+                switch (stage) {
+                    case 2:
+                        var column = adrGrid.getColumnId(col);
+                        if (newValue !== oldValue) {
+                            jQuery.post('/api/touren/update', {column: column, id: row, value: newValue}).then(function (response) {
+                                if (response.success !== true) {
+                                    adrGrid.cells(row, col).setValue(oldValue);
+                                }
+                            });
+                        }
+                        break;
+                }
+                return true;
+            });
+
             var tourenTb = tourenLayout.attachToolbar();
-            tourenTb.addButton('neu',0,'Neu');
+            tourenTb.addButton('neu', 0, 'Neue Tour');
+            tourenTb.addButton('delete', 1, 'Tour löschen');
+            tourenTb.attachEvent('onClick', function (name) {
+                switch (name) {
+                    case 'neu':
+                        var dlg = wins.createWindow({
+                            id: 'adr',
+                            left: 30,
+                            top: 30,
+                            height: 150,
+                            width: 400,
+                            center: true,
+                            text: 'Neue Tour'
+                        });
+                        var form = dlg.attachForm([
+                            {type: 'settings', fieldWidth: 300, labelWidth: 100},
+                            {
+                                type: 'block', width: 380, list: [
+                                {type: 'input', name: 'name', label: 'Name'}
+                            ]
+                            }
+                        ]);
+                        var bar = dlg.attachToolbar();
+                        bar.addButton('save', 0, 'Hinzufügen');
+                        bar.addButton('cancel', 1, 'Abrechen');
+                        bar.attachEvent('onClick', function (name) {
+                            switch (name) {
+                                case 'save':
+                                    jQuery.post('/api/touren/create', form.getFormData()).then(function (response) {
+                                        dlg.close();
+                                        loadTourenGrid()
+                                    });
+                                    break;
+                                case 'cancel':
+                                    dlg.close();
+                                    break;
+                            }
+                        });
+                        dlg.show();
+                        break;
+                    case 'delete':
+                        var id = tourenGrid.getSelectedRowId();
+                        dhtmlx.confirm({
+                            title: 'Tour löschen',
+                            text: 'Tour #' + id + ' und die Einträge in der Planung sicher löschen?',
+                            ok: 'Ja',
+                            cancel: 'Abbrechen',
+                            callback: function (confirmed) {
+                                if (confirmed) {
+                                    jQuery.post('/api/touren/delete', {id: id}).then(loadTourenGrid)
+                                }
+                            }
+                        });
+                        break;
+                }
+            });
+            function loadTourenGrid() {
+                jQuery.post('/api/touren/load').then(function (response) {
+                    tourenGrid.clearAll();
+                    tourenGrid.parse(response.data, 'js');
+                })
+            }
 
+            // </editor-fold>
 
-            jQuery.post('/api/main',{}).then(function(response, success){
-                if (success){
-                    adrGrid.parse(response.adressen,'js');
+            jQuery.post('/api/main', {}).then(function (response, success) {
+                if (success) {
+                    adrGrid.parse(response.adressen, 'js');
                     setTourNames(response.tournames);
                     planAdrCombo.clearAll();
                     planAdrCombo.addOption(response.adressnames);
-				}
+                    tourenGrid.parse(response.touren, 'js');
+                }
             });
-		}
-		function onChange(stage, row, col, newValue, oldValue){
-		    if (stage === 2 && row > 1 && col === 1){
-                var from = grid.cells(row-1,1).getValue();
-                if (from.trim() && newValue.trim()){
-                    loadDistance(from, newValue).then(function(result){
-                        if(result.status == 'OK'){
-							var distance = result.distance_text;
-							var duration = result.duration_text;
-							grid.cells(row,2).setValue(distance);
-							grid.cells(row,3).setValue(duration);
+        }
+        function onChange(stage, row, col, newValue, oldValue) {
+            if (stage === 2 && row > 1 && col === 1) {
+                var from = grid.cells(row - 1, 1).getValue();
+                if (from.trim() && newValue.trim()) {
+                    loadDistance(from, newValue).then(function (result) {
+                        if (result.status == 'OK') {
+                            var distance = result.distance_text;
+                            var duration = result.duration_text;
+                            grid.cells(row, 2).setValue(distance);
+                            grid.cells(row, 3).setValue(duration);
                         }
                     });
                 }
             }
             return true;
         }
-	</script>
+    </script>
 </head>
 <body onload="doOnLoad()">
 </body>

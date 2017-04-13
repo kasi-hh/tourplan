@@ -33,5 +33,30 @@ class PlanController extends BaseController {
         }
         return $response->withJson(['success'=>$result]);
     }
+    public function delete(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
+        $id = $request->getParsedBodyParam('id');
+        $plan = new \App\Plan($this->container);
+        $plan->delete($id);
+        return $response->withJson(['success'=>true]);
+    }
+    public function recalc(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
+        $planId = $request->getParsedBodyParam('plan_id');
+        $plan = new \App\Plan($this->container);
+        $result = $plan->recalc($planId);
+        return $response->withJson(['success'=>$result]);
+    }
+
+    public function setorder(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
+        $order = $request->getParsedBodyParam('order');
+        $planId = $request->getParsedBodyParam('plan_id');
+        $data = [];
+        foreach($order as $entry){
+            $temp =explode('-',$entry);
+            $data[$temp[0]] = intval($temp[1])+1;
+        }
+        $plan = new \App\Plan($this->container);
+        $result = $plan->setOrder($planId, $data);
+        return $response->withJson(['success'=>$result]);
+    }
 
 }

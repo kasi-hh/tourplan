@@ -23,7 +23,7 @@ class Adressen extends Base {
         return $result;
     }
     public function updateColumn($rowId, $columnName, $value){
-        if (!in_array($columnName,['name','stasse','plz','ort','telefon','besonderheit','aufenthalt'])){
+        if (!in_array($columnName,['name','stasse','plz','ort','telefon','besonderheit','aufenthalt','rollator'])){
             throw  new \Exception('Invalid Column Name');
         }
         $db = $this->getDb();
@@ -31,10 +31,10 @@ class Adressen extends Base {
         $result = $stmt->execute([$value,$rowId]);
         return $result ? $result : $stmt->errorInfo();
     }
-    public function create($name, $strasse, $plz, $ort, $telefon, $besonderheiten, $aufenthalt){
+    public function create($name, $strasse, $plz, $ort, $telefon, $besonderheiten, $rollator,$aufenthalt){
         $db = $this->getDb();
-        $stmt = $db->prepare('insert into adressen (name,strasse,plz,ort,telefon,besonderheiten,aufenthalt) values(?,?,?,?,?,?,?)');
-        $result = $stmt->execute([$name, $strasse, $plz, $ort, $telefon, $besonderheiten, $aufenthalt]);
+        $stmt = $db->prepare('insert into adressen (name,strasse,plz,ort,telefon,besonderheiten,rollator,aufenthalt) values(?,?,?,?,?,?,?,?)');
+        $result = $stmt->execute([$name, $strasse, $plz, $ort, $telefon, $besonderheiten, $rollator, $aufenthalt]);
         return $result ? $result : $stmt->errorInfo();
     }
     public function delete($id){

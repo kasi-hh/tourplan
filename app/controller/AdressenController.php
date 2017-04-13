@@ -34,6 +34,7 @@ class AdressenController extends BaseController {
             $request->getParsedBodyParam('ort'),
             $request->getParsedBodyParam('telefon'),
             $request->getParsedBodyParam('besonderheiten'),
+            $request->getParsedBodyParam('rollator'),
             $request->getParsedBodyParam('aufenthalt')
         );
         return $response->withJson(['success'=>$result]);
