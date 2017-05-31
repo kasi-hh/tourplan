@@ -17,6 +17,13 @@ class AdressenController extends BaseController {
         $result = $adressen->getAdressen();
         return $response->withJson(['success'=>true,'data'=>$result]);
     }
+    public function get(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
+        $name = $request->getParsedBodyParam('name');
+        $people = new \App\Adressen($this->container);
+        $result = ['success'=>true];
+        $result['adressen'] = $people->getAdressenNames($name);
+        return $response->withJson($result);
+    }
     public function update(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
         $column = $request->getParsedBodyParam('column');
         $id = $request->getParsedBodyParam('id');

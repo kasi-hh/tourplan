@@ -25,19 +25,19 @@ class Plan extends Base {
         $stmt->execute([$planId,$num]);
         return $stmt->fetch();
     }
-    public function getLastNum($planId){
+    public function getLastNum($planId, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('SELECT MAX(num) AS last_num FROM tourdaten WHERE plan_id = ?');
+        $stmt = $db->prepare('SELECT MAX(num) AS last_num FROM tourdaten WHERE plan_id = ? and datum = ?');
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        $stmt->execute([$planId]);
+        $stmt->execute([$planId, $datum]);
         $row = $stmt->fetch();
         return $row ? $row['last_num'] : '0';
     }
-    public function getTour($id){
+    public function getTour($id, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('SELECT p.id,a.name,p.num,p.plan_id,p.destination AS ort, p.distance_text AS strecke, p.duration_text AS zeit FROM tourdaten p LEFT JOIN adressen a ON a.id=p.adresse_id WHERE p.plan_id = ? ORDER BY p.num ');
+        $stmt = $db->prepare('SELECT p.id,a.name,p.num,p.plan_id,p.destination AS ort, p.distance_text AS strecke, p.duration_text AS zeit FROM tourdaten p LEFT JOIN adressen a ON a.id=p.adresse_id WHERE p.plan_id = ? and p.datum = ? ORDER BY p.num ');
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        $stmt->execute([$id]);
+        $stmt->execute([$id,$datum]);
         $result = [];
         while($row = $stmt->fetch()){
             $result[] = $row;
@@ -55,10 +55,10 @@ class Plan extends Base {
         }
         return $result;
     }
-    public function add($planId, $adrId, $num, $destination){
+    public function add($planId, $adrId, $num, $destination, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('insert into tourdaten (plan_id,adresse_id,num,destination) values(?,?,?,?)');
-        $result = $stmt->execute([$planId, $adrId, $num, $destination]);
+        $stmt = $db->prepare('insert into tourdaten (plan_id,adresse_id,num,destination,datum) values(?,?,?,?,?)');
+        $result = $stmt->execute([$planId, $adrId, $num, $destination,$datum]);
         return $result ? $db->lastInsertId() : $stmt->errorInfo();
 
     }

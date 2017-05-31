@@ -12,18 +12,25 @@ namespace App;
 class Adressen extends Base {
     protected $container;
 
-    public function getAdressen(){
+    public function getAdressen($name = ''){
         $result = [];
         $db = $this->getDb();
         $stm = $db->query('select * from adressen order by name');
         $stm->setFetchMode(\PDO::FETCH_ASSOC);
         while($row = $stm->fetch()){
-            $result[] = $row;
+            if ($name){
+                if ($name == $row['tourname']){
+                    $result[] = $row;
+                }
+            }
+            else {
+                $result[] = $row;
+            }
         }
         return $result;
     }
     public function updateColumn($rowId, $columnName, $value){
-        if (!in_array($columnName,['name','stasse','plz','ort','telefon','besonderheit','aufenthalt','rollator'])){
+        if (!in_array($columnName,['name','stasse','plz','ort','telefon','besonderheit','aufenthalt','rollator', 'tourname'])){
             throw  new \Exception('Invalid Column Name');
         }
         $db = $this->getDb();
@@ -43,13 +50,20 @@ class Adressen extends Base {
         $result = $stmt->execute([$id]);
         return $result ? $result : $stmt->errorInfo();
     }
-    public function getAdressenNames(){
+    public function getAdressenNames($tourname = ''){
         $db = $this->getDb();
         $result = [];
-        $stmt = $db->query('select id as value, name as text from adressen order by name');
+        $stmt = $db->query('select id as value, name as text, tourname from adressen order by name');
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
         while($row = $stmt->fetch()){
-            $result[] = $row;
+            if ($tourname){
+                if ($tourname == $row['tourname']){
+                    $result[] = $row;
+                }
+            }
+            else {
+                $result[] = $row;
+            }
         }
         return $result;
     }

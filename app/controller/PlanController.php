@@ -13,19 +13,21 @@ class PlanController extends BaseController {
 
     public function getTour(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
         $id = $request->getParsedBodyParam('id');
+        $datum = $request->getParsedBodyParam('datum');
         $plan = new \App\Plan($this->container);
-        $data = $plan->getTour($id);
+        $data = $plan->getTour($id, $datum);
         return $response->withJson(['success'=>true,'data'=>$data]);
     }
     public function add(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
         $id = $request->getParsedBodyParam('id');
         $planId = $request->getParsedBodyParam('plan_id');
+        $datum = $request->getParsedBodyParam('datum');
         $adressen = new \App\Adressen($this->container);
         $plan = new \App\Plan($this->container);
-        $num = $plan->getLastNum($planId)+1;
+        $num = $plan->getLastNum($planId, $datum)+1;
         $adresse = $adressen->getAdresse($id);
         $destination = $adresse['strasse'].','.$adresse['plz'].' '.$adresse['ort'];
-        $result = $plan->add($planId,$adresse['id'],$num,$destination);
+        $result = $plan->add($planId,$adresse['id'],$num,$destination, $datum);
         if ($result && $num > 1){
             /** @var  $db */
             $row = $plan->getRow($result);

@@ -14,14 +14,19 @@ $autoloader->addPsr4('App\\',APP_BASE.'/app/src');
 
 $app = new \Slim\App(new Slim\Container(include APP_BASE . '/config/config.php'));
 $app->get('/', function (\Slim\Http\Request $request, \Slim\Http\Response $response, $args) {
-    return $response->withHeader('Content-type', 'text/html')->write(include 'index.html');
+    ob_start();
+    include 'index.html';
+    $content = ob_get_clean();
+    return $response->withHeader('Content-type', 'text/html')->write($content);
 });
 $app->post('/api/distance', '\Controller\GoogleController:getDistance');
 $app->post('/api/main', '\Controller\MainController:getData');
+$app->post('/api/main/ausgabe', '\Controller\MainController:getAusgabe');
 $app->post('/api/adressen/update', '\Controller\AdressenController:update');
 $app->post('/api/adressen/getdata', '\Controller\AdressenController:getdata');
 $app->post('/api/adressen/create', '\Controller\AdressenController:create');
 $app->post('/api/adressen/delete', '\Controller\AdressenController:delete');
+$app->post('/api/adressen/get', '\Controller\AdressenController:get');
 $app->post('/api/plan/gettour', '\Controller\PlanController:getTour');
 $app->post('/api/plan/add', '\Controller\PlanController:add');
 $app->post('/api/plan/delete', '\Controller\PlanController:delete');

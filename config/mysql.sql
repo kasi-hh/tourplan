@@ -29,37 +29,38 @@ CREATE TABLE `adressen` (
   `telefon` char(20) DEFAULT NULL,
   `besonderheiten` text,
   `aufenthalt` int(10) unsigned DEFAULT '0',
+  `rollator` int(1) unsigned DEFAULT '0',
   `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8;
 
 /*Data for the table `adressen` */
 
-insert  into `adressen`(`id`,`name`,`strasse`,`plz`,`ort`,`telefon`,`besonderheiten`,`aufenthalt`,`ts`) values 
-(2,'Beisemann','Ringstr. 20','53902','Bad Münstereifel (Maulbach)','02257 95 92 629','',5,'2017-03-29 11:52:48'),
-(3,'Esser','Bonnerstr. 7','53913','Swisttal  (Miel)','02226 49 85','',0,'2017-03-29 11:05:03'),
-(4,'Fleischer','Auf der Lehmwiese 14','53340','Meckenheim  (Merl)','02225  66 66','0225 6666   anrufen',0,'2017-03-29 11:05:42'),
-(5,'Gödicker','Münstereifeler Str. 3','53505','Berg Freisheim','0157  590 87 86 0','',0,'2017-03-29 11:05:59'),
-(6,'Gollenbeck','Euskirchenerweg 49','53359','Rheinbach','','',0,'2017-03-29 11:06:30'),
-(7,'Heide','Turmblick 21','53359','Rheinbach','02226  162 75','',0,'2017-03-29 11:07:10'),
-(8,'Justen','Windthorst Weg  4','53359','Rheinbach','02226  72 57','02226 7257  anrufen',0,'2017-03-29 11:07:26'),
-(9,'Kirstein','Fritz Knoll Ring 27','53359','Rheinbach','0177   80 42 555','',0,'2017-03-29 11:07:41'),
-(10,'Körbs','Dederichsgraben 3','53359','Rheinbach','','Rollator',0,'2017-03-29 11:07:51'),
-(11,'Kuhnke','Im Ruhrfeld 41','53340','Meckenheim','02225 6563','',0,'2017-03-29 11:08:31'),
-(12,'Küppers','Bruckner Weg 2','53359','Rheinbach','','Rollator',0,'2017-03-29 11:14:34'),
-(13,'Lanzerath','Naturfreundeweg 6','53505','Berg','02643  10 93','',0,'2017-03-29 13:18:34'),
-(14,'Löwer','Tombergerstr. 37','53359','Rheinbach  (Wormersdorf)','02225  13 714','Rollator',0,'2017-03-29 13:19:14'),
-(15,'Meller','Am Junkersgarten 10','53913','Swisttal  (Buschhoven)','','',0,'2017-03-29 13:19:40'),
-(16,'Meusel','Am  Erstdorfer Bach 6','53340','Meckenheim','','',0,'2017-03-29 13:20:06'),
-(17,'Molis','Breslauer Str. 21','53913','Swisttal  (Morenhoven)','02226  79 69','vorne sitzen',0,'2017-03-29 13:22:18'),
-(18,'Nußbaum','Talweg 4','53359','Rheinbach  (Merzbach)','02226  90 39 313','Rollator',0,'2017-03-29 13:22:44'),
-(19,'Richter','Dederichsgraben 3','53359','Rheinbach','02226  13 490','',0,'2017-03-29 11:14:26'),
-(20,'Scharrer','Sassestr. 1','53359','Rheinbach','','',0,'2017-03-29 11:14:31'),
-(21,'Schröder','Zur Alten Kirche 12','53902','Bad Münstereifel  (Houverath)','','',0,'2017-03-29 13:23:19'),
-(22,'Schwind','Grevelsberger Weg 7','53343','Wachtberg  (Vilip)','0228  32 54 38','HL     -   Stock',0,'2017-03-29 13:23:46'),
-(23,'Segler','Eichenstr. 23','53359','Rheinbach  (Ramershoven)','','',0,'2017-03-29 13:24:17'),
-(24,'Stolpmann','Neugartenstr. 24','53359','Rheinbach','02226  90 92 63','',0,'2017-03-29 11:14:20'),
-(25,'Wentland','Breslauer Str.18','53359','Rheinbach','02226  89 19 100','rÃ¼ckwÃ¤rts',0,'2017-03-29 11:14:23');
+insert  into `adressen`(`id`,`name`,`strasse`,`plz`,`ort`,`telefon`,`besonderheiten`,`aufenthalt`,`rollator`,`ts`) values 
+(2,'Beisemann','Ringstr. 20','53902','Bad Münstereifel (Maulbach)','02257 95 92 629','',5,0,'2017-03-29 11:52:48'),
+(3,'Esser','Bonnerstr. 7','53913','Swisttal  (Miel)','02226 49 85','',0,0,'2017-03-29 11:05:03'),
+(4,'Fleischer','Auf der Lehmwiese 14','53340','Meckenheim  (Merl)','02225  66 66','0225 6666   anrufen',0,0,'2017-03-29 11:05:42'),
+(5,'Gödicker','Münstereifeler Str. 3','53505','Berg Freisheim','0157  590 87 86 0','',0,0,'2017-03-29 11:05:59'),
+(6,'Gollenbeck','Euskirchenerweg 49','53359','Rheinbach','','',0,0,'2017-03-29 11:06:30'),
+(7,'Heide','Turmblick 21','53359','Rheinbach','02226  162 75','',0,0,'2017-03-29 11:07:10'),
+(8,'Justen','Windthorst Weg  4','53359','Rheinbach','02226  72 57','02226 7257  anrufen',0,0,'2017-03-29 11:07:26'),
+(9,'Kirstein','Fritz Knoll Ring 27','53359','Rheinbach','0177   80 42 555','',0,0,'2017-03-29 11:07:41'),
+(10,'Körbs','Dederichsgraben 3','53359','Rheinbach','','Rollator',0,1,'2017-04-13 16:45:34'),
+(11,'Kuhnke','Im Ruhrfeld 41','53340','Meckenheim','02225 6563','',0,0,'2017-03-29 11:08:31'),
+(12,'Küppers','Bruckner Weg 2','53359','Rheinbach','','Rollator',0,1,'2017-04-13 16:45:36'),
+(13,'Lanzerath','Naturfreundeweg 6','53505','Berg','02643  10 93','',0,0,'2017-03-29 13:18:34'),
+(14,'Löwer','Tombergerstr. 37','53359','Rheinbach  (Wormersdorf)','02225  13 714','Rollator',0,1,'2017-04-13 16:45:38'),
+(15,'Meller','Am Junkersgarten 10','53913','Swisttal  (Buschhoven)','','',0,0,'2017-03-29 13:19:40'),
+(16,'Meusel','Am  Erstdorfer Bach 6','53340','Meckenheim','','',0,0,'2017-03-29 13:20:06'),
+(17,'Molis','Breslauer Str. 21','53913','Swisttal  (Morenhoven)','02226  79 69','vorne sitzen',0,0,'2017-03-29 13:22:18'),
+(18,'Nußbaum','Talweg 4','53359','Rheinbach  (Merzbach)','02226  90 39 313','Rollator',0,1,'2017-04-13 16:45:41'),
+(19,'Richter','Dederichsgraben 3','53359','Rheinbach','02226  13 490','',0,0,'2017-03-29 11:14:26'),
+(20,'Scharrer','Sassestr. 1','53359','Rheinbach','','',0,0,'2017-03-29 11:14:31'),
+(21,'Schröder','Zur Alten Kirche 12','53902','Bad Münstereifel  (Houverath)','','',0,0,'2017-03-29 13:23:19'),
+(22,'Schwind','Grevelsberger Weg 7','53343','Wachtberg  (Vilip)','0228  32 54 38','HL     -   Stock',0,0,'2017-03-29 13:23:46'),
+(23,'Segler','Eichenstr. 23','53359','Rheinbach  (Ramershoven)','','',0,0,'2017-03-29 13:24:17'),
+(24,'Stolpmann','Neugartenstr. 24','53359','Rheinbach','02226  90 92 63','',0,0,'2017-03-29 11:14:20'),
+(25,'Wentland','Breslauer Str.18','53359','Rheinbach','02226  89 19 100','rückwärts',0,0,'2017-04-13 16:46:02');
 
 /*Table structure for table `tourdaten` */
 
@@ -78,7 +79,7 @@ CREATE TABLE `tourdaten` (
   `duration_value` int(11) DEFAULT NULL,
   `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uni_gruppe_num` (`plan_id`,`num`)
+  KEY `uni_gruppe_num` (`plan_id`,`num`)
 ) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8;
 
 /*Data for the table `tourdaten` */
