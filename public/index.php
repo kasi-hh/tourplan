@@ -32,6 +32,7 @@ $app->post('/api/plan/add', '\Controller\PlanController:add');
 $app->post('/api/plan/delete', '\Controller\PlanController:delete');
 $app->post('/api/plan/recalc', '\Controller\PlanController:recalc');
 $app->post('/api/plan/setorder', '\Controller\PlanController:setorder');
+$app->post('/api/plan/init', '\Controller\PlanController:init');
 $app->post('/api/touren/load', '\Controller\TourenController:load');
 $app->post('/api/touren/create', '\Controller\TourenController:create');
 $app->post('/api/touren/delete', '\Controller\TourenController:delete');

@@ -31,6 +31,7 @@
         }
         function doOnLoad() {
             var colwidth = jQuery('body').width() / 9, col2 = colwidth * 2, col3 = colwidth * 3;
+            var todayStr = new Date().toISOString().substr(0,10);
             wins = new dhtmlXWindows({
                 image_path: "dhtmlx/imgs/"
             });
@@ -45,14 +46,14 @@
                 template: 'text',
                 items: [
                     {id: 'adressen', text: 'Adressen', selected: false},
-                    {id: 'planung', text: 'Planung', selected: false},
-                    {id: 'touren', text: 'Touren', selected: true},
+                    {id: 'planung', text: 'Planung', selected: true},
+                    {id: 'touren', text: 'Tournamen', selected: false},
                     {id: 'ausgabe', text: 'Ausgabe'},
                 ]
             });
 
             // <editor-fold desc="**Bereich Planung**">
-            var planCurrentTour,planCurrentDatum = '2017-01-01';
+            var planCurrentTour,planCurrentDatum = todayStr,planCurrentDatumInit;
             var planLayout = sidebar.cells('planung').attachLayout({
                 pattern: '1C',
                 cells: [
@@ -83,36 +84,40 @@
             planGrid.init();
 
             var planTb = planLayout.attachToolbar();
-            planTb.addText('text1',0,'Tourname');
-            planTb.addInput('tourname',1,'',100);
-            planTb.addText('text1', 2, 'Tour:');
-            planTb.addText('text2', 3, '<span id="plan-tour"></span>');
-            planTb.addText('datum',4, '<input type="text" name="plan_datum" id="plan-datum" value="2017-01-01" style="width:100px">')
-            planTb.addText('text3', 5, 'Adressen:');
-            planTb.addText('text4', 6, '<span id="plan-adr"></span>');
-            planTb.addButton('add_adresse', 7, 'Adresse hinzufügen');
-            planTb.addButton('delete_adresse', 8, 'Adresse löschen');
-            planTb.addButton('recalc', 9, 'Distanz neu berechnen');
+            planTb.addText('text1', 0, 'Tourname:');
+            planTb.addText('text2', 1, '<span id="plan-tour"></span>');
+            planTb.addText('datum',2, '<input type="text" name="plan_datum" id="plan-datum" value="'+todayStr+'" style="width:100px">')
+            planTb.addText('text3', 3, 'Adressen:');
+            planTb.addText('text4', 4, '<span id="plan-adr"></span>');
+            planTb.addButton('add_adresse', 5, 'Adresse hinzufügen');
+            planTb.addButton('delete_adresse', 6, 'Adresse löschen');
+            planTb.addButton('recalc', 7, 'Distanz neu berechnen');
+            planTb.addSpacer('recalc');
+            planTb.addText('text10',19,'Von:');
+            planTb.addText('datum',20, '<input type="text" name="plan_datum_init" id="plan-datum-init" value="" style="width:100px">')
+            planTb.addButton('init', 21, 'Init');
             var planCalendar = new dhtmlXCalendarObject('plan-datum');
             planCalendar.attachEvent('onClick', function(date, status){
                 planCurrentDatum = jQuery('#plan-datum').val();
                 loadPlanTour();
             });
+            var planCalendarInit = new dhtmlXCalendarObject('plan-datum-init');
+            planCalendarInit.attachEvent('onClick', function(date, status){
+                planCurrentDatumInit = jQuery('#plan-datum-init').val();
+            });
 
-            var planTourCombo = new dhtmlXCombo("plan-tour", "plan_tour", "100px");
-            var planAdrCombo = new dhtmlXCombo("plan-adr", "plan_adr", "100px");
+            var planTourCombo = new dhtmlXCombo("plan-tour", "plan_tour", "150px");
+            var planAdrCombo = new dhtmlXCombo("plan-adr", "plan_adr", "150px");
             planTourCombo.attachEvent('onChange', function () {
                 planCurrentTour = planTourCombo.getSelectedValue();
-                loadPlanTour();
-            });
-            planTb.attachEvent('onEnter', function(id, value){
-                jQuery.post('/api/adressen/get',{name:value}).then(function(response){
+                jQuery.post('/api/adressen/get',{tourname_id:planCurrentTour}).then(function(response){
                     planAdrCombo.clearAll();
                     planAdrCombo.addOption(response.adressen);
                 });
+                loadPlanTour();
             });
             var loadPlanTour = function () {
-                jQuery.post('/api/plan/gettour', {id: planCurrentTour, datum:planCurrentDatum}).then(function (response) {
+                jQuery.post('/api/plan/gettour', {tourname_id: planCurrentTour, datum:planCurrentDatum}).then(function (response) {
                     planGrid.clearAll();
                     planGrid.parse(response.data, 'js');
                 });
@@ -123,7 +128,7 @@
                     case 'add_adresse':
                         var id = planAdrCombo.getSelectedValue();
                         if (planCurrentTour && id) {
-                            jQuery.post('/api/plan/add', {plan_id: planCurrentTour, datum:planCurrentDatum, id: id}).then(function (response) {
+                            jQuery.post('/api/plan/add', {tourname_id: planCurrentTour, datum:planCurrentDatum, id: id}).then(function (response) {
                                 loadPlanTour();
                             })
                         }
@@ -149,7 +154,14 @@
                         break;
                     case 'recalc':
                         if (planCurrentTour) {
-                            jQuery.post('/api/plan/recalc', {plan_id: planCurrentTour}).then(function (response) {
+                            jQuery.post('/api/plan/recalc', {tourname_id: planCurrentTour, datum:planCurrentDatum}).then(function (response) {
+                                loadPlanTour();
+                            })
+                        }
+                        break;
+                    case 'init':
+                        if (planCurrentDatumInit){
+                            jQuery.post('/api/plan/init', {tourname_id: planCurrentTour,datum:planCurrentDatum,init_datum:planCurrentDatumInit}).then(function (response) {
                                 loadPlanTour();
                             })
                         }
@@ -158,7 +170,7 @@
             });
             // </editor-fold>
             // <editor-fold desc="**Bereich Ausgabe**">
-            var ausgabeCurrentTour, ausgabeCurrentRec;
+            var ausgabeCurrentTour, ausgabeCurrentRec, ausgabeCurrentDatum = todayStr;
             var ausgabeLayout = sidebar.cells('ausgabe').attachLayout({
                 pattern: '1C',
                 cells: [
@@ -183,17 +195,25 @@
             });
 
             var ausgabeTb = ausgabeLayout.attachToolbar();
-            ausgabeTb.addText('text1', 0, 'Touren');
+            ausgabeTb.addText('text1', 0, 'Tour');
             ausgabeTb.addText('text2', 1, '<span id="ausgabe-tour"></span>');
+            ausgabeTb.addText('datum',2, '<input type="text" name="ausgabe_datum" id="ausgabe-datum" value="'+todayStr+'" style="width:100px">')
+
             var ausgabeTourCombo = new dhtmlXCombo("ausgabe-tour", "ausgabe_tour", "100px");
             ausgabeTourCombo.attachEvent('onChange', function(){
                 ausgabeCurrentTour = ausgabeTourCombo.getSelectedValue();
                 loadAusgabeGrid();
             });
-            ausgabeTb.addText('text1', 2, 'Start');
-            ausgabeTb.addInput('start', 3, formatTime(new Date()));
-            ausgabeTb.addButton('btn_start',4,'Berechnen');
-            ausgabeTb.addButton('btn_map',5,'Google Maps');
+            var ausgabeCalendar = new dhtmlXCalendarObject('ausgabe-datum');
+            ausgabeCalendar.attachEvent('onClick', function(date, status){
+                ausgabeCurrentDatum = jQuery('#ausgabe-datum').val();
+                loadAusgabeGrid();
+            });
+
+            ausgabeTb.addText('text1', 5, 'Zeit');
+            ausgabeTb.addInput('start', 6, formatTime(new Date()));
+            ausgabeTb.addButton('btn_start',7,'Berechnen');
+            ausgabeTb.addButton('btn_map',8,'Google Maps');
             ausgabeTb.attachEvent('onClick', function(id){
                 switch(id){
                     case 'btn_map':
@@ -211,8 +231,9 @@
                 }
             });
             function loadAusgabeGrid(){
+                if (!ausgabeCurrentDatum || !ausgabeCurrentTour) return;
                 ausgabeGrid.clearAll();
-                jQuery.post('/api/main/ausgabe', {tour_id:ausgabeCurrentTour})
+                jQuery.post('/api/main/ausgabe', {tourname_id:ausgabeCurrentTour, datum:ausgabeCurrentDatum})
                     .then(function(response) {
                         if (response.data){
                             ausgabeGrid.parse(response.data,'js');
@@ -250,7 +271,7 @@
                     {id: 'a', header: false}
                 ]
             });
-            var adrToolbar = adrLayout.attachToolbar(), adrForm;
+            var adrToolbar = adrLayout.attachToolbar(), adrForm, tournamen=[];
             adrToolbar.addButton('add', 0, 'Neue Adresse');
             adrToolbar.addButton('delete', 1, 'Adresse löschen');
             adrToolbar.addButton('map', 2, 'Maps');
@@ -270,7 +291,7 @@
                             {type: 'settings', fieldWidth: 230, labelWidth: 100},
                             {
                                 type: 'block', width: 380, list: [
-                                {type: 'input', name: 'tourname', label: 'Tourname'},
+                                {type: 'combo', name: 'tourname_id', label: 'Tourname', options:tournamen},
                                 {type: 'input', name: 'name', label: 'Name'},
                                 {type: 'input', name: 'strasse', label: 'Straße'},
                                 {type: 'input', name: 'plz', label: 'Plz'},
@@ -288,7 +309,7 @@
                         bar.attachEvent('onClick', function (name) {
                             switch (name) {
                                 case 'save':
-                                    jQuery.post('/api/adressen/create', form.getFormData()).then(function (response) {
+                                    jQuery.post('/api/adressen/create', adrForm.getFormData()).then(function (response) {
                                         dlg.close();
                                         loadAdrGrid();
                                     });
@@ -324,15 +345,18 @@
                         break;
                 }
             });
-            var adrGrid = adrLayout.cells('a').attachGrid();
+            var adrGrid = adrLayout.cells('a').attachGrid(), adrTournamenCombo;
             adrGrid.setImagePath("dhtmlx/imgs/");
             adrGrid.setHeader("Id,Tourname,Name,Straße,Plz,Ort,Telefon,Besonderheiten,Rolli,Zeit");
             adrGrid.setInitWidths('50,100,200,200,50,200,100,300,50,50');
             adrGrid.setColAlign("right,left,left,left,left,left,left,left,left,left");
-            adrGrid.setColTypes("ro,ed,ed,ed,ed,ed,ed,ed,ch,ed");
-            adrGrid.setColSorting("na,str,str,str,str,str,str,str,int,str");
-            adrGrid.setColumnIds('id,tourname,name,strasse,plz,ort,telefon,besonderheiten,rollator,aufenthalt');
+            adrGrid.setColTypes("ro,co,ed,ed,ed,ed,ed,ed,ch,ed");
+            adrGrid.setColSorting("na,int,str,str,str,str,str,str,int,str");
+            adrGrid.setColumnIds('id,tourname_id,name,strasse,plz,ort,telefon,besonderheiten,rollator,aufenthalt');
             adrGrid.init();
+            adrTournamenCombo = adrGrid.getCombo(1);
+            //adrTournamenCombo.put(1,'test');
+            //adrTournamenCombo.put(2,'testing');
             adrGrid.enableEditEvents(true, true, true);
             adrGrid.enableDragAndDrop(true);
             //adrGrid.enableMercyDrag(true);
@@ -360,7 +384,7 @@
                 });
             };
             // </editor-fold>
-            // <editor-fold desc="**Bereich Planung**">
+            // <editor-fold desc="**Bereich Touren**">
             var tourenLayout = sidebar.cells('touren').attachLayout({
                 pattern: '1C',
                 cells: [
@@ -464,10 +488,11 @@
                 planTourCombo.addOption(names);
                 ausgabeTourCombo.clearAll();
                 ausgabeTourCombo.addOption(names);
-                var combo = adrGrid.getCombo(1);
+                adrTournamenCombo.clear();
+                tournamen = names;
                 for (var i = 0, l=names.length; i<l; i++){
                     console.log(i,names[i].value, names[i].text, names[i]);
-                    combo.put(names[i].value, names[i].text);
+                    adrTournamenCombo.put(names[i].value, names[i].text);
                 }
             };
             function formatSeconds(secs){
@@ -486,6 +511,7 @@
             }
             jQuery.post('/api/main', {}).then(function (response, success) {
                 if (success) {
+                    setTourNames(response.tournames);
                     adrGrid.parse(response.adressen, 'js');
                     response.tournames.sort(function(a,b){
                         if (a.text === b.text) {
@@ -495,7 +521,6 @@
                             return a.text < b.text ? -1 : 1;
                         }
                     });
-                    setTourNames(response.tournames);
                     planAdrCombo.clearAll();
                     planAdrCombo.addOption(response.adressnames);
                     tourenGrid.parse(response.touren, 'js');

@@ -12,12 +12,14 @@ namespace App;
 class Main extends Base {
     protected $container;
 
-    public function getAusgabe($tourId){
+    public function getAusgabe($tournameId, $datum){
+        $datum = (new \DateTime($datum))->format('Y-m-d');
+        $tournameId = (int) $tournameId;
         $result = [];
         $db = $this->getDb();
-        $stm = $db->prepare('select td.id,a.aufenthalt, a.name,td.origin,td.destination, td.distance_text, td.distance_value,td.duration_text,td.duration_value from tourdaten td left join adressen a on a.id = td.adresse_id where td.plan_id = ? order by td.num');
+        $stm = $db->prepare('select td.id,a.aufenthalt, a.name,td.origin,td.destination, td.distance_text, td.distance_value,td.duration_text,td.duration_value from tourdaten td left join adressen a on a.id = td.adresse_id where td.tourname_id = ? and td.datum = ? order by td.num');
         $stm->setFetchMode(\PDO::FETCH_ASSOC);
-        $stm->execute([$tourId]);
+        $stm->execute([$tournameId, $datum]);
         $lastDestination = '';
         while($row = $stm->fetch()){
             $secs = (int)$row['duration_value'];

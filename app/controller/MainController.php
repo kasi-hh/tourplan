@@ -24,9 +24,11 @@ class MainController extends BaseController {
     }
     public function getAusgabe(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
         $result = [];
-        $tourId = $request->getParsedBodyParam('tour_id');
+        $tournameId = $request->getParsedBodyParam('tourname_id');
+        $datum = $request->getParsedBodyParam('datum');
         $main = new \App\Main($this->container);
-        $result['data'] = $main->getAusgabe($tourId);
+        $result['data'] = $main->getAusgabe($tournameId, $datum);
+        $result['success'] = true;
         return $response->withJson($result);
     }
 }

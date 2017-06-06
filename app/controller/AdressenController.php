@@ -18,10 +18,10 @@ class AdressenController extends BaseController {
         return $response->withJson(['success'=>true,'data'=>$result]);
     }
     public function get(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
-        $name = $request->getParsedBodyParam('name');
+        $tournameId= $request->getParsedBodyParam('tourname_id');
         $people = new \App\Adressen($this->container);
         $result = ['success'=>true];
-        $result['adressen'] = $people->getAdressenNames($name);
+        $result['adressen'] = $people->getAdressenNames($tournameId);
         return $response->withJson($result);
     }
     public function update(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
@@ -35,6 +35,7 @@ class AdressenController extends BaseController {
     public function create(\Slim\Http\Request $request, \Slim\Http\Response $response, $args){
         $adressen = new \App\Adressen($this->container);
         $result = $adressen->create(
+            $request->getParsedBodyParam('tourname_id'),
             $request->getParsedBodyParam('name'),
             $request->getParsedBodyParam('strasse'),
             $request->getParsedBodyParam('plz'),

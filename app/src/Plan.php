@@ -18,47 +18,47 @@ class Plan extends Base {
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
-    public function getPrevRow($planId, $num){
+    public function getPrevRow($tournameId, $datum, $num){
         $db = $this->getDb();
-        $stmt = $db->prepare('SELECT * from tourdaten where plan_id = ? and num < ? order by num desc limit 1');
+        $stmt = $db->prepare('SELECT * from tourdaten where tourname_id = ? and datum = ? and num < ? order by num desc limit 1');
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        $stmt->execute([$planId,$num]);
+        $stmt->execute([$tournameId,$datum,$num]);
         return $stmt->fetch();
     }
-    public function getLastNum($planId, $datum){
+    public function getLastNum($tournameId, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('SELECT MAX(num) AS last_num FROM tourdaten WHERE plan_id = ? and datum = ?');
+        $stmt = $db->prepare('SELECT MAX(num) AS last_num FROM tourdaten WHERE tourname_id = ? and datum = ?');
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        $stmt->execute([$planId, $datum]);
+        $stmt->execute([$tournameId, $datum]);
         $row = $stmt->fetch();
         return $row ? $row['last_num'] : '0';
     }
-    public function getTour($id, $datum){
+    public function getTour($tournameId, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('SELECT p.id,a.name,p.num,p.plan_id,p.destination AS ort, p.distance_text AS strecke, p.duration_text AS zeit FROM tourdaten p LEFT JOIN adressen a ON a.id=p.adresse_id WHERE p.plan_id = ? and p.datum = ? ORDER BY p.num ');
+        $stmt = $db->prepare('SELECT p.id,a.name,p.num,p.tourname_id,p.destination AS ort, p.distance_text AS strecke, p.duration_text AS zeit FROM tourdaten p LEFT JOIN adressen a ON a.id=p.adresse_id WHERE p.tourname_id = ? and p.datum = ? ORDER BY p.num ');
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        $stmt->execute([$id,$datum]);
+        $stmt->execute([$tournameId,$datum]);
         $result = [];
         while($row = $stmt->fetch()){
             $result[] = $row;
         }
         return $result;
     }
-    public function getTourRows($planId){
+    public function getTourRows($tournameId, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('SELECT p.* FROM tourdaten p WHERE p.plan_id = ? ORDER BY p.num ');
+        $stmt = $db->prepare('SELECT p.* FROM tourdaten p WHERE p.tourname_id = ? and datum = ? ORDER BY p.num ');
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        $stmt->execute([$planId]);
+        $stmt->execute([$tournameId, $datum]);
         $result = [];
         while($row = $stmt->fetch()){
             $result[] = $row;
         }
         return $result;
     }
-    public function add($planId, $adrId, $num, $destination, $datum){
+    public function add($tournameId, $adrId, $num, $destination, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('insert into tourdaten (plan_id,adresse_id,num,destination,datum) values(?,?,?,?,?)');
-        $result = $stmt->execute([$planId, $adrId, $num, $destination,$datum]);
+        $stmt = $db->prepare('insert into tourdaten (tourname_id,adresse_id,num,destination,datum) values(?,?,?,?,?)');
+        $result = $stmt->execute([$tournameId, $adrId, $num, $destination,$datum]);
         return $result ? $db->lastInsertId() : $stmt->errorInfo();
 
     }
@@ -67,11 +67,11 @@ class Plan extends Base {
         $row = $this->getRow($id);
         $stmt = $db->prepare('delete from tourdaten where id = ?');
         $result = $stmt->execute([$id]);
-        $this->reorder($row['plan_id']);
+        $this->reorder($row['tourname_id'], $row['datum']);
         return $result;
     }
     public function setDistance(array $row){
-        $prev = $this->getPrevRow($row['plan_id'],$row['num']);
+        $prev = $this->getPrevRow($row['tourname_id'],$row['datum'],$row['num']);
         if (!$prev){
             return 'Prev nicht vorhanden';
         }
@@ -92,8 +92,8 @@ class Plan extends Base {
         ]);
         return $result ? $result : $stmt->errorInfo();
     }
-    public function recalc($planId){
-        $data = $this->getTourRows($planId);
+    public function recalc($tournameId, $datum){
+        $data = $this->getTourRows($tournameId, $datum);
         $counter = 0;
         foreach($data as $row){
             if ($counter > 0){
@@ -108,8 +108,8 @@ class Plan extends Base {
         }
         return true;
     }
-    public function reorder($planId){
-        $data = $this->getTourRows($planId);
+    public function reorder($tournameId, $datum){
+        $data = $this->getTourRows($tournameId, $datum);
         $db = $this->getDb();
         $counter = 1;
         $stmt = $db->prepare('update tourdaten set num = ? where id = ?');
@@ -119,7 +119,7 @@ class Plan extends Base {
         }
     }
 
-    public function setOrder($planId, array $data){
+    public function setOrder($id, array $data){
         $db = $this->getDb();
         $stmt = $db->prepare('update tourdaten set num = ? where id = ?');
         foreach($data as $id => $order){
@@ -127,10 +127,21 @@ class Plan extends Base {
         }
         return true;
     }
-    public function deletePlan($planId){
+    public function deletePlan($tournameId, $datum){
         $db = $this->getDb();
-        $stmt = $db->prepare('delete from tourdaten where plan_id = ?');
-        $result = $stmt->execute([$planId]);
+        $stmt = $db->prepare('delete from tourdaten where tourname_id = ?');
+        $result = $stmt->execute([$tournameId]);
         return $result;
+    }
+    public function init($tournameId, $datum, $vonDatum){
+        $datum = trim($datum);
+        $vonDatum = trim($vonDatum);
+        if (!$datum || ! $vonDatum) return false;
+        $db = $this->getDb();
+        $db->prepare('delete from tourdaten where tourname_id = ? and datum = ?')->execute([$tournameId, $datum]);
+        $datum = (new \DateTime($datum))->format('Y-m-d');
+        $vonDatum = (new \DateTime($vonDatum))->format('Y-m-d');
+        $stmt = $db->prepare('INSERT INTO tourdaten SELECT NULL, tourname_id, adresse_id, \''.$datum.'\', num, origin, destination, distance_text, distance_value, duration_text, duration_value, NOW() FROM tourdaten WHERE tourname_id = ? AND datum = ?');
+        return $stmt->execute([$tournameId, $vonDatum]);
     }
 }
