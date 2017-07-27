@@ -5,6 +5,7 @@
  * Date: 17.03.2017
  * Time: 14:30
  */
+//ini_set('error_log','../phperror.log');
 define('APP_BASE', dirname(__DIR__));
 
 //$_SERVER['SCRIPT_NAME'] = '/index.php';

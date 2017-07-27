@@ -39,6 +39,7 @@ class MainController extends BaseController {
         $datum = $request->getParsedBodyParam('datum');
         $tour = $request->getParsedBodyParam('tour');
         //include __DIR__.'/../../excel.php';
+        // composer ordner hochgespielt
         try {
             $spreadsheet = new Spreadsheet();
 
@@ -91,8 +92,10 @@ class MainController extends BaseController {
                 ->setFormatCode(
                     \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_00
                 );
+            $sheet->getStyle('D' . $startRow . ':D' . $rowNum)->getAlignment()->setHorizontal('right');
             $sheet->setCellValue('C' . $rowNum, '=SUM(C' . $startRow . ':C' . $rowNum . ')');
-            $writer = IOFactory::createWriter($spreadsheet, 'xlsx');
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            //return $response->withJson(['data'=>'test','line'=>__LINE__]);
             $writer->save(__DIR__ . '/../../public/excel.xlsx');
         }
         catch (\Exception $e){
@@ -107,9 +110,9 @@ class MainController extends BaseController {
         //header("Content-Type: application/force-download");
         header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         //header("Content-Type: application/download");
-        header("Content-Disposition: attachment;filename=tour.xml");
+        header("Content-Disposition: attachment;filename=tour.xlsx");
         header("Content-Transfer-Encoding: binary ");
-        echo file_get_contents( __DIR__.'/../../public/excel.xml');
+        echo file_get_contents( __DIR__.'/../../public/excel.xlsx');
         exit;
     }
 }
