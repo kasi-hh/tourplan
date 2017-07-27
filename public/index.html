@@ -179,12 +179,12 @@
             });
             ausgabeGrid = ausgabeLayout.cells('a').attachGrid();
             ausgabeGrid.setImagePath("dhtmlx/imgs/");
-            ausgabeGrid.setHeader("Name/Ort,KM,Min,Auf,Extra,Zeit");
-            ausgabeGrid.setInitWidths('*,50,50,50,50,80');
+            ausgabeGrid.setHeader("Abfahrt,Name/Ort,KM,Min,Auf,Extra");
+            ausgabeGrid.setInitWidths('50,*,50,50,50,50');
             ausgabeGrid.setColAlign("left,left,left,left,left,left");
-            ausgabeGrid.setColTypes("ro,ro,ro,ro,edn,ro");
+            ausgabeGrid.setColTypes("ro,ro,ro,ro,ro,edn");
             ausgabeGrid.setColSorting("na,na,na,na,na,na");
-            ausgabeGrid.setColumnIds('target,km,dauer,aufenthalt,extra,zeit');
+            ausgabeGrid.setColumnIds('zeit,target,km,dauer,aufenthalt,extra');
             ausgabeGrid.init();
             //ausgabeGrid.attachEvent('onEditCell', onChange);
             ausgabeGrid.enableEditEvents(true, true, true);
@@ -214,6 +214,7 @@
             ausgabeTb.addInput('start', 6, formatTime(new Date()));
             ausgabeTb.addButton('btn_start',7,'Berechnen');
             ausgabeTb.addButton('btn_map',8,'Google Maps');
+            ausgabeTb.addButton('btn_excel',9,'Excel');
             ausgabeTb.attachEvent('onClick', function(id){
                 switch(id){
                     case 'btn_map':
@@ -227,6 +228,9 @@
                         break;
                     case 'btn_start':
                         calculateTimes(ausgabeTb.getValue('start'));
+                        break;
+                    case 'btn_excel':
+                        createExcel();
                         break;
                 }
             });
@@ -242,12 +246,14 @@
             }
             function calculateTimes(start){
                 var time = parseTime(start);
-                ausgabeGrid.forEachRow(function(id){
-                    var rec = getGridRecord(ausgabeGrid,id);
-                    var aufenthalt = (parseInt(ausgabeGrid.cells(id,3).getValue()) || 0) * 60 * 1000;
-                    var extra = (parseInt(ausgabeGrid.cells(id,4).getValue()) || 0) * 60 * 1000;
+                jQuery(ausgabeGrid.obj).find('tr').each(function(index, el){
+                    var rec = el._attrs;
+                    if (!rec) return;
+                    var id = rec.id;
+                    var aufenthalt = (parseInt(rec.aufenthalt) || 0) * 60 * 1000;
+                    var extra = (parseInt(ausgabeGrid.cells(id,5).getValue()) || 0) * 60 * 1000;
                     var duration = (parseInt(rec.duration) || 0) * 1000;
-                    var cell = ausgabeGrid.cells(id,5);
+                    var cell = ausgabeGrid.cells(id,0);
                     if (!rec.saddr){
                         cell.setValue(formatTime(time))
                     }
@@ -257,7 +263,27 @@
                     }
                 });
             }
-
+            function createExcel(){
+                var data = [];
+                jQuery(ausgabeGrid.obj).find('tr').each(function(index, el){
+                    var rec = el._attrs;
+                    if (!rec) return;
+                    var id = rec.id;
+                    data.push({
+                        id:rec.id,
+                        start:ausgabeGrid.cells(id,0).getValue(),
+                        name:ausgabeGrid.cells(id,1).getValue(),
+                        km:ausgabeGrid.cells(id,2).getValue(),
+                        min:ausgabeGrid.cells(id,3).getValue(),
+                        auf:ausgabeGrid.cells(id,4).getValue(),
+                        extra:ausgabeGrid.cells(id,5).getValue()
+                    })
+                });
+                console.log('data', data);
+                jQuery.post('/api/main/create-excel',{data:data, datum:ausgabeCurrentDatum, tour:ausgabeTourCombo.getSelectedText()}).then(function(){
+                    window.location.href = '/api/main/get-excel';
+                });
+            }
             function parseTime(str){
                 var temp = str.split(':');
                 var h = temp[0] || 0, m = temp[1] || 0, s=temp[2] || 0;
@@ -503,7 +529,7 @@
                 return hours +':'+ ('0'+minutes).slice(-2)
             }
             function formatTime(d){
-                return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2);
+                return (('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2)).substr(0,5);
             }
             function getGridRecord(grid, id) {
                 var cell = grid.cells(id, 0);

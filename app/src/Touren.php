@@ -22,6 +22,13 @@ class Touren extends Base {
         }
         return $result;
     }
+    public function getTour($id){
+        $db = $this->getDb();
+        $stmt = $db->prepare('select * from tournamen where id = ?');
+        $stmt->execute([$id]);
+        $stmt->setFetchMode(\PDO::FETCH_ASSOC);
+        return $stmt->fetch();
+    }
     public function load(){
         $db = $this->getDb();
         $stmt = $db->query('select * from tournamen order by bezeichnung');

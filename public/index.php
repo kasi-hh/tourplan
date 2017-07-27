@@ -22,6 +22,8 @@ $app->get('/', function (\Slim\Http\Request $request, \Slim\Http\Response $respo
 $app->post('/api/distance', '\Controller\GoogleController:getDistance');
 $app->post('/api/main', '\Controller\MainController:getData');
 $app->post('/api/main/ausgabe', '\Controller\MainController:getAusgabe');
+$app->post('/api/main/create-excel', '\Controller\MainController:createExcel');
+$app->get('/api/main/get-excel', '\Controller\MainController:getExcel');
 $app->post('/api/adressen/update', '\Controller\AdressenController:update');
 $app->post('/api/adressen/getdata', '\Controller\AdressenController:getdata');
 $app->post('/api/adressen/create', '\Controller\AdressenController:create');
