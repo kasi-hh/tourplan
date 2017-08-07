@@ -363,10 +363,11 @@
                         break;
                     case 'map':
                         var id = adrGrid.getSelectedRowId();
-                        var str = adrGrid.cells(id, 2).getValue();
+                        //var str = ''; adrGrid.cells(id, 2).getValue();
                         var plz = adrGrid.cells(id, 3).getValue();
                         var ort = adrGrid.cells(id, 4).getValue();
-                        var place = str + ',' + plz + ' ' + ort + ',Deutschland';
+                        //var place = str + ',' + plz + ' ' + ort + ',Deutschland';
+                        var place = plz + ' ' + ort + ',Deutschland';
                         window.open('https://www.google.com/maps/place/' + place, 'maps');
                         break;
                 }
