@@ -70,6 +70,8 @@ class MainController extends BaseController {
                 $name = str_replace('<br>', ', ', $row['name']);
                 $km = (float)str_replace(',', '.', $row['km']);
                 $min = $row['min'];
+                $minTemp = explode(':',$min);
+                $min = (int) (60 * ((int)$minTemp[0]) + (int) $minTemp[1]);
                 $auf = $row['auf'];
                 $extra = $row['extra'];
                 $sheet->setCellValue('A' . $rowNum, $start);
@@ -94,6 +96,7 @@ class MainController extends BaseController {
                 );
             $sheet->getStyle('D' . $startRow . ':D' . $rowNum)->getAlignment()->setHorizontal('right');
             $sheet->setCellValue('C' . $rowNum, '=SUM(C' . $startRow . ':C' . $rowNum . ')');
+            $sheet->setCellValue('D' . $rowNum, '=SUM(D' . $startRow . ':D' . $rowNum . ')');
             $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
             //return $response->withJson(['data'=>'test','line'=>__LINE__]);
             $writer->save(__DIR__ . '/../../public/excel.xlsx');

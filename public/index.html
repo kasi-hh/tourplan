@@ -301,6 +301,7 @@
             adrToolbar.addButton('add', 0, 'Neue Adresse');
             adrToolbar.addButton('delete', 1, 'Adresse löschen');
             adrToolbar.addButton('map', 2, 'Maps');
+            adrToolbar.addButton('list',3,'<a href="/api/adressen/get-list" target="blank">Liste</a>');
             adrToolbar.attachEvent('onClick', function (name) {
                 switch (name) {
                     case 'add':

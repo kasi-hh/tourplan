@@ -22,9 +22,19 @@ class Adressen extends Base {
         }
         return $result;
     }
+    public function getList(){
+        $result = [];
+        $db = $this->getDb();
+        $stm = $db->query('SELECT t.*, a.* FROM adressen a LEFT JOIN tournamen t ON t.id = a.tourname_id WHERE NOT ISNULL(t.id) ORDER BY t.bezeichnung, a.name');
+        $stm->setFetchMode(\PDO::FETCH_ASSOC);
+        while ($row = $stm->fetch()) {
+            $result[] = $row;
+        }
+        return $result;
+    }
 
     public function updateColumn($rowId, $columnName, $value) {
-        if (!in_array($columnName, ['name', 'stasse', 'plz', 'ort', 'telefon', 'besonderheit', 'aufenthalt', 'rollator', 'tourname_id'])) {
+        if (!in_array($columnName, ['name', 'strasse', 'plz', 'ort', 'telefon', 'besonderheit', 'aufenthalt', 'rollator', 'tourname_id'])) {
             throw  new \Exception('Invalid Column Name');
         }
         $db = $this->getDb();

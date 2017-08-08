@@ -30,6 +30,7 @@ $app->post('/api/adressen/getdata', '\Controller\AdressenController:getdata');
 $app->post('/api/adressen/create', '\Controller\AdressenController:create');
 $app->post('/api/adressen/delete', '\Controller\AdressenController:delete');
 $app->post('/api/adressen/get', '\Controller\AdressenController:get');
+$app->get('/api/adressen/get-list', '\Controller\AdressenController:getList');
 $app->post('/api/plan/gettour', '\Controller\PlanController:getTour');
 $app->post('/api/plan/add', '\Controller\PlanController:add');
 $app->post('/api/plan/delete', '\Controller\PlanController:delete');
